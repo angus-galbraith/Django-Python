@@ -195,7 +195,7 @@ class FinishesPage(tk.Frame,):
         self.running.set(self.runningTotal)
         self.playerName = tk.StringVar()
  
- 
+        #create frame one, get the name and call frame 2 
         frame1 = tk.Frame(self)
         frame1.grid(row=0, column=0, sticky='nsew')
         namelabel = tk.Label(frame1, text="Player Name: ")
