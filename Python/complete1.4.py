@@ -9,8 +9,7 @@ import tkinter as tk
 from tkinter import ttk
 import sqlite3 as sq
  
-import tkinter as tk
-import sqlite3 as sq
+
  
 class Database:
     '''
@@ -46,8 +45,15 @@ class Database:
         print(query)
         return query
  
+
+class FiveOhOne(tk.Frame):
+    def __init__(self):
+        tk.Frame.__init__(self)
+        label = tk.Label(self, text='501 Page', bg='pink')
+        label.grid(column=0, row=0, sticky='news')
+
  
-class Rtb(tk.Frame):
+class RoundTheBoard(tk.Frame):
     def __init__(self):
         tk.Frame.__init__(self)
         label = tk.Label(self, text='Rtb Page', bg='pink')
@@ -62,18 +68,18 @@ class Main(tk.Frame):
         label.grid(column=0, row=0, sticky='news')
  
  
-class Finish(tk.Frame):
+class Finishes(tk.Frame):
     def __init__(self):
         tk.Frame.__init__(self)
         label = tk.Label(self, text='Finish Page', bg='tomato')
         label.grid(column=0, row=0, sticky='news')
  
  
-class HighScore(tk.Frame):
+class HighScores(tk.Frame):
     '''
         HighScores class displays all scores
     '''
-    def __init__(self, data):
+    def __init__(self,):
         tk.Frame.__init__(self)
         container = tk.Frame(self)
         container.grid(column=0, row=0, sticky='new')
@@ -87,7 +93,7 @@ class HighScore(tk.Frame):
         header.grid(column=0, row=0, sticky='new', padx=3, pady=(0, 8))
  
         row = 1
-        for name, score in data:
+        '''for name, score in data:
             label = tk.Label(container, text=f'{name.title()}: {score}', bg='lightgray', anchor='w', padx=8)
             label['font'] = (None, 14, 'normal')
             label['highlightbackground'] = 'black'
@@ -95,6 +101,7 @@ class HighScore(tk.Frame):
             label['highlightthickness'] = 1
             label.grid(column=0, row=row, sticky='new', ipadx=5, padx=3)
             row += 1
+        ''' 
  
  
 class NewGame(tk.Frame):
@@ -117,6 +124,7 @@ class Window(tk.Frame):
  
         self.menubar = tk.Menu(parent)
         parent.configure(menu=self.menubar)
+        
  
  
  
@@ -132,54 +140,62 @@ class Controller:
          
  
         # Setup the pages by calling the appropiate class
-        page2 = Rtb()
-        page2.grid(column=0, row=0, sticky='news')
-        page2.grid_columnconfigure(0, weight=3)
-        page2.grid_rowconfigure(0, weight=3)
+        self.page1 = Main()
+        self.page1.grid(column=0, row=0, sticky='news')
+        self.page1.grid_columnconfigure(0, weight=3)
+        self.page1.grid_rowconfigure(0, weight=3)
+
+
+        self.page2 = FiveOhOne()
+        self.page2.grid(column=0, row=0, sticky='news')
+        self.page2.grid_columnconfigure(0, weight=3)
+        self.page2.grid_rowconfigure(0, weight=3)
  
-        page3 = Finish()
+        page3 = RoundTheBoard()
         page3.grid(column=0, row=0, sticky='news')
         page3.grid_columnconfigure(0, weight=3)
         page3.grid_rowconfigure(0, weight=3)
  
-        page4 = HighScore(self.get_scores())
+        page4 = Finishes()
         page4.grid(column=0, row=0, sticky='news')
         page4.grid_columnconfigure(0, weight=3)
         page4.grid_rowconfigure(0, weight=3)
  
-        page5 = NewGame()
+        page5 = HighScores()
         page5.grid(column=0, row=0, sticky='news')
         page5.grid_columnconfigure(0, weight=3)
         page5.grid_rowconfigure(0, weight=3)
  
-        page1 = Main()
-        page1.grid(column=0, row=0, sticky='news')
-        page1.grid_columnconfigure(0, weight=3)
-        page1.grid_rowconfigure(0, weight=3)
+        
  
         # Setup the menus and commands
         game_menu = tk.Menu(self.window.menubar, tearoff=0)
-        game_menu.add_command(label='New Game', command=page5.tkraise)
+        game_menu.add_command(label='501', command=lambda: self.newGame(self.page2))
+        game_menu.add_command(label='Round the Board', command=page3.tkraise)
+        game_menu.add_command(label='Finishes', command=page5.tkraise)
         game_menu.add_separator()
         game_menu.add_command(label='Exit', command=self.window.parent.destroy)
  
-        page_menu = tk.Menu(self.window.menubar, tearoff=0)
-        page_menu.add_command(label='Main Page', command=page1.tkraise)
-        page_menu.add_command(label='RTB Page', command=page2.tkraise)
-        page_menu.add_command(label='Finish Page', command=page3.tkraise)
-        page_menu.add_command(label='High Scores', command=page4.tkraise)
+        score_menu = tk.Menu(self.window.menubar, tearoff=0)
+        score_menu.add_command(label='501 Averages', command=lambda: self.newGame(self.page1))
+        score_menu.add_command(label='Round the Board', command=page3.tkraise)
+        score_menu.add_command(label='Finishes', command=page3.tkraise)
+        score_menu.add_command(label='High Scores', command=page4.tkraise)
  
-        page_menu.add_separator()
-        page_menu.add_command(label='Exit', command=self.window.parent.destroy)
+        #page_menu.add_separator()
+        #page_menu.add_command(label='Exit', command=self.window.parent.destroy)
  
-        self.window.menubar.add_cascade(label='Game Options', menu=game_menu)
-        self.window.menubar.add_cascade(label='Pages', menu=page_menu)
+        self.window.menubar.add_cascade(label='New Game', menu=game_menu)
+        self.window.menubar.add_cascade(label='High Scores', menu=score_menu)
+
+    def newGame(self, page):
+        page = page
+        if page == self.page1:
+            self.page1.tkraise()
+        elif page == self.page2:
+            self.page2.tkraise()
  
-    def get_scores(self):
-        ''' Method for getting scores '''
-        data = self.db.getall(self.db.tables[1])
-        print(data)
-        return data
+    
  
  
 if __name__ == '__main__':

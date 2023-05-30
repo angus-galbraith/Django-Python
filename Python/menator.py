@@ -135,16 +135,18 @@ class Controller:
         page4.grid(column=0, row=0, sticky='news')
         page4.grid_columnconfigure(0, weight=3)
         page4.grid_rowconfigure(0, weight=3)
+
+        page1 = Main()
+        page1.grid(column=0, row=0, sticky='news')
+        page1.grid_columnconfigure(0, weight=3)
+        page1.grid_rowconfigure(0, weight=3)
  
         page5 = NewGame()
         page5.grid(column=0, row=0, sticky='news')
         page5.grid_columnconfigure(0, weight=3)
         page5.grid_rowconfigure(0, weight=3)
  
-        page1 = Main()
-        page1.grid(column=0, row=0, sticky='news')
-        page1.grid_columnconfigure(0, weight=3)
-        page1.grid_rowconfigure(0, weight=3)
+        
  
         # Setup the menus and commands
         game_menu = tk.Menu(self.window.menubar, tearoff=0)
