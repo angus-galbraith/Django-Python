@@ -33,12 +33,22 @@ class Database:
             playername text, score integer
             )
         ''')
+        self.cursor.execute('''
+            create table if not exists fiveohone (
+            playername text, average integer, checkout integer
+            )
+        ''')
         self.connection.commit()
  
  
     def insert(self, playername, score, table):
         self.cursor.execute(f'insert into {table} (playername, score) values(?,?)', (playername, score))
         self.connection.commit()
+
+    def insert_darts(self, playername, average, checkout, table):
+        self.cursor.execute(f'insert into {table} (playername, average, checkout) values(?,?,?)', (playername, average, checkout))
+        self.connection.commit()
+        
              
     def getall(self, table):
         query = self.cursor.execute(f'select * from {table} order by score desc').fetchall()
@@ -53,17 +63,20 @@ class FiveOhOne(tk.Frame):
         #variables
         self.player1Name = tk.StringVar()
         self.player2Name = tk.StringVar()
+        self.leg_to_play = 0
+        self.set_to_play = 0
+        
 
         frame1 = tk.Frame(self)
         frame1.grid(row=0)
         name1label = tk.Label(frame1, text="Player Name 1: ")
         name1label.grid(row=0, column=0, padx=10, pady=10)
-        name1Entry = tk.Entry(frame1, textvariable=self.player1Name)
-        name1Entry.grid(row=0, column=1)
+        self.name1Entry = tk.Entry(frame1, textvariable=self.player1Name)
+        self.name1Entry.grid(row=0, column=1)
         name2label = tk.Label(frame1, text="Player Name 2: ")
         name2label.grid(row=0, column=2, padx=10, pady=10)
-        name2Entry = tk.Entry(frame1, textvariable=self.player2Name)
-        name2Entry.grid(row=0, column=3)
+        self.name2Entry = tk.Entry(frame1, textvariable=self.player2Name)
+        self.name2Entry.grid(row=0, column=3)
         tk.Label(frame1, text="Sets: First to:-").grid(row=1, column=0)
         self.sets_spinbox = tk.Spinbox(frame1, values=(1,2,3,4))
         self.sets_spinbox.grid(row=1, column=1)
@@ -90,16 +103,18 @@ class FiveOhOne(tk.Frame):
     def start_game(self):
         self.game_frame = tk.Frame(self)
         self.game_frame.grid(row=1, column=0)
-        self.player1 = player()  #create 2 instances of the player class
-        self.player2 = player()
+        self.legs_to_win = int(self.legs_spinbox.get()) # set variables for legs and sets 
+        self.sets_to_win = int(self.sets_spinbox.get())
+        self.player1 = player(self.legs_to_win)  #create 2 instances of the player class
+        self.player2 = player(self.legs_to_win)
         self.player1.stats["name"]= self.player1Name.get()  # set the players names
         self.player2.stats["name"] = self.player2Name.get()
         self.add_frames()
+        self.name1Entry.configure(bg="lightblue")
+        self.name2Entry.configure(bg="lightblue")
         self.screen_refresh(self.frame_one, self.frame_two, self.frame_three, self.player1.stats, self.player2.stats) # populate the three screens
-        self.legs_to_win = int(self.legs_spinbox.get()) # set variables for legs and sets 
-        self.sets_to_win = int(self.sets_spinbox.get())
-        self.leg_to_play = 1  # starting variables for legs and sets
-        self.set_to_play = 1
+        
+       
         
         self.to_throw()
 
@@ -183,8 +198,13 @@ class FiveOhOne(tk.Frame):
             self.player_to_throw()
 
 
-class player:
-    def __init__(self,):
+
+        
+
+
+class player():
+    def __init__(self, legs_to_win):
+        self.legs_to_win = legs_to_win
 
         self.name = "Player"
         
@@ -256,7 +276,7 @@ class player:
         at_doubles = int(self.darts_doubles.get())
         self.stats['Darts at double'] += at_doubles
         self.doubles_window.destroy()
-        FiveOhOne.player_to_throw()
+        controller.page2.player_to_throw()
 
     def calculate_averages(self):
         self.stats['Average'] = round(3*(self.score['totalscore']/self.score['totaldarts']), 1)
@@ -278,34 +298,37 @@ class player:
         doubledarts = int(self.darts_doubles.get())
         self.stats['Darts at double'] += doubledarts
         self.stats["Checkout %"] = (self.stats['Doubles Hit']/self.stats['Darts at double'])*100
-        FiveOhOne.leg_to_play += 1
+        
         totaldarts = int(self.darts_used.get())
         self.score['totaldarts'] += totaldarts
         self.leg_window.destroy()
-        if self.stats['legs'] == FiveOhOne.legs_to_win:
+        if self.stats['legs'] == self.legs_to_win:
             self.set_won()
         else:
-            FiveOhOne.to_throw()
+            controller.page2.leg_to_play += 1
+            controller.page2.to_throw()
         
 
     def set_won(self):
         print('at sets')
         self.stats['sets'] += 1
-        if self.stats['sets'] == FiveOhOne.sets_to_win:
+        if self.stats['sets'] == controller.page2.sets_to_win:
             self.game_won()
         else:
-            FiveOhOne.player1.stats['legs'] = 0
-            FiveOhOne.player2.stats['legs'] = 0
-            FiveOhOne.leg_to_play = 1
-            FiveOhOne.set_to_play += 1
-            FiveOhOne.to_throw()
-
+            controller.page2.player1.stats['legs'] = 0
+            controller.page2.player2.stats['legs'] = 0
+            controller.page2.leg_to_play = 1
+            controller.page2.set_to_play += 1
+            controller.page2.to_throw()
 
 
 
 
     def game_won(self):
         print("Game over")
+        
+        controller.db.insert_darts(controller.page2.player1.stats["name"], controller.page2.player1.stats["Average"], controller.page2.player1.stats["Checkout %"], "fiveohone" )
+        print("Database updated")
         #player_stats.update_stats()
 
 
@@ -465,27 +488,36 @@ class HighScores(tk.Frame):
     '''
     def __init__(self,):
         tk.Frame.__init__(self)
-        container = tk.Frame(self)
-        container.grid(column=0, row=0, sticky='new')
-        container.grid_columnconfigure(0, weight=3)
- 
-        header = tk.Label(container, text='High Scores', bg='gray')
-        header['font'] = (None, 18, 'bold')
-        header['highlightbackground'] = 'black'
-        header['highlightcolor'] = 'black'
-        header['highlightthickness'] = 1
-        header.grid(column=0, row=0, sticky='new', padx=3, pady=(0, 8))
- 
-        row = 1
-        '''for name, score in data:
-            label = tk.Label(container, text=f'{name.title()}: {score}', bg='lightgray', anchor='w', padx=8)
-            label['font'] = (None, 14, 'normal')
-            label['highlightbackground'] = 'black'
-            label['highlightcolor'] = 'black'
-            label['highlightthickness'] = 1
-            label.grid(column=0, row=row, sticky='new', ipadx=5, padx=3)
-            row += 1
-        ''' 
+        
+        #create frames
+        frame1 = tk.Frame(self)
+        frame1.grid(row=0, column=0)
+        frame2 = tk.Frame(self)
+        frame2.grid(row=1, column=0)
+        frame3 = tk.Frame(self)
+        frame3.grid(row=1, column=1)
+        frame4 = tk.Frame(self)
+        frame4.grid(row=1, column=2)
+
+        # buttons
+        rtbButton = tk.Button(frame1, text="Round the Board", command=self.showRtbFrame)
+        rtbButton.grid(row=0, column=0)
+        finishesButton = tk.Button(frame1, text="Finishes", command=self.showRtbFrame)
+        finishesButton.grid(row=0, column=1)
+        averageButton = tk.Button(frame1, text="Darts - Average", command=self.showRtbFrame)
+        averageButton.grid(row=0, column=2)
+        checkButton = tk.Button(frame1, text="Darts - Checkout%", command=self.showRtbFrame)
+        checkButton.grid(row=0, column=3)
+
+
+    def showRtbFrame(self):
+        rtblist = controller.db.getall("rtbhigh")
+        print(rtblist)
+
+
+
+
+
  
  
 class NewGame(tk.Frame):
@@ -543,9 +575,9 @@ class Controller:
         # Setup the pages by calling the appropiate class
         
 
-        page2 = FiveOhOne()
-        page2.grid(column=0, row=0, sticky='news')
-        page2.grid_columnconfigure(0, weight=3)
+        self.page2 = FiveOhOne()
+        self.page2.grid(column=0, row=0, sticky='news')
+        self.page2.grid_columnconfigure(0, weight=3)
         #page2.grid_rowconfigure(0, weight=3)
  
         page3 = RoundTheBoard()
@@ -558,8 +590,8 @@ class Controller:
         page4.grid_columnconfigure(0, weight=3)
         #page4.grid_rowconfigure(0, weight=3)
  
-        page5 = HighScores()
-        page5.grid(column=0, row=0, sticky='news')
+        self.page5 = HighScores()
+        self.page5.grid(column=0, row=0, sticky='news')
         #page5.grid_columnconfigure(0, weight=3)
         #page5.grid_rowconfigure(0, weight=3)
 
@@ -578,7 +610,7 @@ class Controller:
  
         # Setup the menus and commands
         game_menu = tk.Menu(self.window.menubar, tearoff=0)
-        game_menu.add_command(label='501', command=page2.tkraise)
+        game_menu.add_command(label='501', command=self.page2.tkraise)
         game_menu.add_command(label='Round the Board', command=page3.tkraise)
         game_menu.add_command(label='Finishes', command=page4.tkraise)
         game_menu.add_separator()
@@ -588,7 +620,7 @@ class Controller:
         score_menu.add_command(label='501 Averages', command=lambda: self.newGame(self.page1))
         score_menu.add_command(label='Round the Board', command=page3.tkraise)
         score_menu.add_command(label='Finishes', command=page3.tkraise)
-        score_menu.add_command(label='High Scores', command=page4.tkraise)
+        score_menu.add_command(label='High Scores', command=self.page5.tkraise)
  
         #page_menu.add_separator()
         #page_menu.add_command(label='Exit', command=self.window.parent.destroy)
