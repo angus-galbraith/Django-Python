@@ -492,8 +492,8 @@ class HighScores(tk.Frame):
         #create frames
         frame1 = tk.Frame(self)
         frame1.grid(row=0, column=0)
-        frame2 = tk.Frame(self)
-        frame2.grid(row=1, column=0)
+        self.frame2 = tk.Frame(self)
+        self.frame2.grid(row=1, column=0)
         frame3 = tk.Frame(self)
         frame3.grid(row=1, column=1)
         frame4 = tk.Frame(self)
@@ -512,6 +512,13 @@ class HighScores(tk.Frame):
 
     def showRtbFrame(self):
         rtblist = controller.db.getall("rtbhigh")
+        rownum = 0
+        for item in rtblist:
+            tk.Label(self.frame2, text=item[0]).grid(row=rownum, column=0)
+            tk.Label(self.frame2, text=item[1]).grid(row=rownum, column=1)
+            rownum += 1
+            
+            
         print(rtblist)
 
 
