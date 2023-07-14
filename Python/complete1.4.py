@@ -8,6 +8,7 @@ from tkinter import *
 import tkinter as tk
 from tkinter import ttk
 import sqlite3 as sq
+import os
  
 
  
@@ -18,7 +19,8 @@ class Database:
     '''
     def __init__(self):
         self.tables = ('rtbhigh', 'finisheshigh')
-        self.connection = sq.connect('highscores.db')
+        #db_path = join(dirname(dirname(abspath(__file__))), 'data/highscores.db')
+        self.connection = sq.connect("data/highscores.db")
         self.cursor = self.connection.cursor()
  
     def create_tables(self):
@@ -358,28 +360,33 @@ class RoundTheBoard(tk.Frame):
         nameEntry.grid(row=0, column=1)
         startButton = tk.Button(frame1, text="Start", command=self.show_frame2)
         startButton.grid(row=0, column=2)
+
+        self.frame3 = tk.Frame(self)
+        tk.Label(self.frame3, text="Game Over").grid(row=0, column=0)
+        self.button = tk.Button(self.frame3, text="Save")
+        self.button.grid(row=0, column=1)
  
     def show_frame2(self):
         self.name = self.playerName.get()
-        frame2 = tk.Frame(self)
-        frame2.grid(row=1, column=0)
-        togoforLabel = tk.Label(frame2, text="To Go For:")
+        self.frame2 = tk.Frame(self)
+        self.frame2.grid(row=1, column=0)
+        togoforLabel = tk.Label(self.frame2, text="To Go For:")
         togoforLabel.grid(row=0, column=0, sticky='nsew')
-        numberLabel = tk.Label(frame2, textvariable=self.goFor)
+        numberLabel = tk.Label(self.frame2, textvariable=self.goFor)
         numberLabel.grid(row=1, column=0, sticky='nsew')
-        hitLabel = tk.Label(frame2, text="Enter Number Hit:")
+        hitLabel = tk.Label(self.frame2, text="Enter Number Hit:")
         hitLabel.grid(row=0, column=1)
-        self.hitCombo = ttk.Combobox(frame2, width = 15)
+        self.hitCombo = ttk.Combobox(self.frame2, width = 15)
         self.hitCombo.grid(row=1, column=1, sticky='nsew')
         self.hitCombo['values'] = (0, 1, 2, 3,4,5,6, 7,8,9)
         #self.hitCombo.bind('<<ComboboxSelected>>', self.score_entered)
         self.hitCombo.bind('<Return>', self.score_entered)
-        scoreButton = tk.Button(frame2, text=" Enter: ", command=self.score_entered)
+        scoreButton = tk.Button(self.frame2, text=" Enter: ", command=self.score_entered)
         scoreButton.grid(row=2, column=1)
          
-        totalLabel = tk.Label(frame2, text="Running Total : ")
+        totalLabel = tk.Label(self.frame2, text="Running Total : ")
         totalLabel.grid(row=0, column=2, sticky='nsew')
-        runningLabel = tk.Label(frame2, textvariable=self.running)
+        runningLabel = tk.Label(self.frame2, textvariable=self.running)
         runningLabel.grid(row=1, column=2, sticky='nsew')
  
  
@@ -399,6 +406,25 @@ class RoundTheBoard(tk.Frame):
          
             self.hitCombo.set('')
          
+
+    def gameFinished(self):
+        controller.db.insert(self.name, self.runningTotal, "rtbhigh")
+        for widgets in self.frame2.winfo_children():
+            widgets.destroy()
+        self.frame2.destroy()
+        self.toGoFor = 1
+        self.runningTotal = 0
+        self.goFor = tk.IntVar()
+        self.goFor.set(self.toGoFor)
+        self.running = tk.IntVar()
+        self.running.set(self.runningTotal)
+       
+        self.frame3.grid(row=2, column=0)
+        
+        
+        
+        
+
  
 class Main(tk.Frame):
     ''' Main class is the start/landing page '''
@@ -587,9 +613,9 @@ class Controller:
         self.page2.grid_columnconfigure(0, weight=3)
         #page2.grid_rowconfigure(0, weight=3)
  
-        page3 = RoundTheBoard()
-        page3.grid(column=0, row=0, sticky='news')
-        page3.grid_columnconfigure(0, weight=3)
+        self.page3 = RoundTheBoard()
+        self.page3.grid(column=0, row=0, sticky='news')
+        self.page3.grid_columnconfigure(0, weight=3)
         #page3.grid_rowconfigure(0, weight=3)
  
         page4 = Finishes()
@@ -618,15 +644,15 @@ class Controller:
         # Setup the menus and commands
         game_menu = tk.Menu(self.window.menubar, tearoff=0)
         game_menu.add_command(label='501', command=self.page2.tkraise)
-        game_menu.add_command(label='Round the Board', command=page3.tkraise)
+        game_menu.add_command(label='Round the Board', command=self.page3.tkraise)
         game_menu.add_command(label='Finishes', command=page4.tkraise)
         game_menu.add_separator()
         game_menu.add_command(label='Exit', command=self.window.parent.destroy)
  
         score_menu = tk.Menu(self.window.menubar, tearoff=0)
         score_menu.add_command(label='501 Averages', command=lambda: self.newGame(self.page1))
-        score_menu.add_command(label='Round the Board', command=page3.tkraise)
-        score_menu.add_command(label='Finishes', command=page3.tkraise)
+        score_menu.add_command(label='Round the Board', command=self.page3.tkraise)
+        score_menu.add_command(label='Finishes', command=self.page3.tkraise)
         score_menu.add_command(label='High Scores', command=self.page5.tkraise)
  
         #page_menu.add_separator()
@@ -634,6 +660,15 @@ class Controller:
  
         self.window.menubar.add_cascade(label='New Game', menu=game_menu)
         self.window.menubar.add_cascade(label='High Scores', menu=score_menu)
+
+
+        self.page3.button['command'] = self.page1.tkraise
+
+    def frame_destroy(self):
+        self.page1.tkraise
+        self.page3.frame3.destroy()
+
+        
 
     #def newGame(self, page):
         #page = page
@@ -649,4 +684,6 @@ if __name__ == '__main__':
     root = tk.Tk()
     root.geometry('600x400+300+300')
     controller = Controller(Database(), Window(root))
+    cwd = os.getcwd()
+    print(cwd)
     root.mainloop()
