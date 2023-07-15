@@ -6,7 +6,9 @@ def index(request):
     return render(request, 'index.html')
 
 def rtb(request):
-    return render(request, 'rtb.html')
+    toGoFor = 1 
+    dict = { "toGoFor" : toGoFor}
+    return render(request, 'rtb.html', dict)
 
 def finishes(request):
     return render(request, 'finishes.html')
