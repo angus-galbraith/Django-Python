@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1> Round the Board page</h1>
+
+
+<form method="POST">
+    {% csrf_token %}
+    <div class="text-center">
+       
+        <p>
+           
+           <label >You Scored : {{runningtotal}}</label>
+           
+            
+            
+            
+        </p>
+    </div>
+</form>
+
+{% endblock %}
