@@ -1,1 +1,30 @@
 {% extends "base.html" %}
+
+{% block content %}
+
+<h1> Round the Board page</h1>
+
+
+<form method="POST">
+    {% csrf_token %}
+    <div class="text-center">
+       
+        <p>
+           
+            <p>
+                {% if gameover%}
+                <h2>Game over: {{playername}} You scored : {{runningTotal}}</h2>
+                <a href="{% url 'highscores' %}" class="btn btn-primary btn-sm">High Scores</a>
+                {% else%}
+                <label for="guess">Player : {{playername}}</label>
+                <label for="guess">Number to go for: {{toGoFor}}</label>
+                <input type="text" name="numberHit" size="40" id="guess" value=0 />
+            </p>
+                <input type="submit" class="btn btn-primary" value="Enter"/>
+                {% endif %}
+            
+        </p>
+    </div>
+</form>
+
+{% endblock %}

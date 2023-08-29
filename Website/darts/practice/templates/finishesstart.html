@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1> Round the Board page</h1>
+
+
+<form method="POST">
+    {% csrf_token %}
+    <div class="text-center">
+       
+        <p>
+            {% if message %}
+                <a href="{% url 'finishes' %}" class="btn btn-primary btn-sm">Start</a>
+            {% else %}
+                <input type="text" name="playername" size="40" id="name"  />
+                 <input type="submit" class="btn btn-primary" value="Enter"/>
+            {% endif %}
+
+        </p>
+        
+           
+            
+            
+            
+        
+    </div>
+</form>
+
+{% endblock %}

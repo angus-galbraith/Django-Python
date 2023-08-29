@@ -6,10 +6,18 @@
 
 
 <ul>
+    RTB
     {% for score in scores %}
      <li>{{ score.name }} {{score.score}}</li>
     {% endfor %}
-    </ul>
+</ul>
+
+<ul>
+    Finishes
+    {% for score in scores2 %}
+     <li>{{ score.name }} {{score.score}}</li>
+    {% endfor %}
+</ul>
 
 
 {% endblock %}
