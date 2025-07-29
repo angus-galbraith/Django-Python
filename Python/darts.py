@@ -158,11 +158,13 @@ class mainFrame(Frame):
             self.screen_refresh(self.frame_one, self.frame_two, self.frame_three, self.player1.stats, self.player2.stats)
             self.pl1_remaining.configure(bg="yellow")
             self.pl2_remaining.configure(bg="white")
+            self.score_ent.delete(0, END)
             self.score_ent.focus()
         else:
             self.screen_refresh(self.frame_one, self.frame_two, self.frame_three, self.player1.stats, self.player2.stats)
             self.pl2_remaining.configure(bg="yellow")
             self.pl1_remaining.configure(bg="white")
+            self.score_ent.delete(0, END)
             self.score_ent.focus()
         
 

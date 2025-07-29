@@ -1,0 +1,4 @@
+Pyqtstacked needs to be rebuilt so that the windows are built then stacked and called from the menus.
+
+501 needs to be ccreated. Best setup looks to be two vertical boxes at each side, with a grid box in the middle.
+Two end boxes to contain player stats, middle to show remaining for each player along with entry box for scores
